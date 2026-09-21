@@ -56,9 +56,12 @@ const jsonSchema = {
   required: ["enhanced_prompt", "why"],
 } as const;
 
-export const sharpenPrompt = createServerFn({ method: "POST" })
-  .inputValidator((data) => inputSchema.parse(data))
-  .handler(async ({ data }): Promise<SharpenResult> => {
+export type SharpenResponse =
+  | { ok: true; data: SharpenResult }
+  | { ok: false; code: SharpenErrorCode; message: string };
+
+async function run(data: z.infer<typeof inputSchema>): Promise<SharpenResult> {
+  {
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) {
       throw new SharpenError("config", "The AI service is not configured.");
