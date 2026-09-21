@@ -182,4 +182,23 @@ async function run(data: z.infer<typeof inputSchema>): Promise<SharpenResult> {
       enhanced_prompt: validated.data.enhanced_prompt.trim(),
       why: validated.data.why.slice(0, 4).map((w) => w.trim()),
     };
+  }
+}
+
+export const sharpenPrompt = createServerFn({ method: "POST" })
+  .inputValidator((data) => inputSchema.parse(data))
+  .handler(async ({ data }): Promise<SharpenResponse> => {
+    try {
+      return { ok: true, data: await run(data) };
+    } catch (error) {
+      if (error instanceof SharpenError) {
+        return { ok: false, code: error.code, message: error.message };
+      }
+      console.error("sharpen failed", error);
+      return {
+        ok: false,
+        code: "network",
+        message: "Something went wrong while sharpening. Please try again.",
+      };
+    }
   });
